@@ -1,0 +1,4 @@
+/* Keep intentionally oversized decorative layers inside the fixed viewport scene. */
+.site-shell {
+  contain: layout paint;
+}

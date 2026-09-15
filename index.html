@@ -8,6 +8,7 @@
   <title>Jepong Devxyz — Project Archive</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="scene-containment.css">
+  <link rel="stylesheet" href="loading.css">
   <script>document.documentElement.classList.replace('no-js', 'js');</script>
 </head>
 <body>
@@ -29,51 +30,36 @@
       </span>
     </a>
     <div class="chapter-readout" aria-live="polite">
-      <span id="current-chapter">00</span>
-      <span class="chapter-divider">/</span>
-      <span>10</span>
+      <span id="current-chapter">00</span><span class="chapter-divider">/</span><span>10</span>
     </div>
   </header>
 
   <nav id="chapter-nav" class="chapter-nav" aria-label="Project chapters"></nav>
-
-  <div class="scroll-progress" aria-hidden="true">
-    <span id="scroll-progress-bar"></span>
-  </div>
+  <div class="scroll-progress" aria-hidden="true"><span id="scroll-progress-bar"></span></div>
 
   <main id="main-content">
     <section id="chapter-00" class="chapter chapter--intro chapter--active" data-chapter="00" aria-labelledby="intro-title">
       <div class="chapter-inner intro-grid">
         <p class="eyebrow reveal">JEPONG DEVXYZ / PROJECT ARCHIVE</p>
-        <h1 id="intro-title" class="intro-title reveal">
-          <span>BUILD.</span>
-          <span>BREAK.</span>
-          <span>MAKE IT</span>
-          <span>BETTER.</span>
-        </h1>
-        <div class="intro-meta reveal">
-          <p>A living collection of experiments, apps, tools, and ideas.</p>
-          <p class="intro-note">Official projects will appear here one by one.</p>
-        </div>
-        <a class="explore-cue" href="#chapter-01">
-          <span>Scroll to explore</span>
-          <span class="explore-line" aria-hidden="true"></span>
-        </a>
+        <h1 id="intro-title" class="intro-title reveal"><span>BUILD.</span><span>BREAK.</span><span>MAKE IT</span><span>BETTER.</span></h1>
+        <div class="intro-meta reveal"><p>A living collection of experiments, apps, tools, and ideas.</p><p class="intro-note">Official projects will appear here one by one.</p></div>
+        <a class="explore-cue" href="#chapter-01"><span>Scroll to explore</span><span class="explore-line" aria-hidden="true"></span></a>
       </div>
     </section>
 
+    <div class="loading-skeleton" aria-hidden="true">
+      <div class="loading-skeleton__inner">
+        <span class="loading-skeleton__number"></span>
+        <div class="loading-skeleton__title"><span></span><span></span></div>
+        <span class="loading-skeleton__visual"></span>
+        <div class="loading-skeleton__meta"><span></span><span></span><span></span><span></span></div>
+      </div>
+    </div>
     <div id="project-chapters"></div>
   </main>
 
-  <footer class="site-footer">
-    <span>© 2026 Jepong Devxyz</span>
-    <span>Original portfolio experience</span>
-  </footer>
-
-  <noscript>
-    <div class="noscript-note">JavaScript is disabled. The project archive still works as a readable page.</div>
-  </noscript>
-
+  <footer class="site-footer"><span>© 2026 Jepong Devxyz</span><span>Original portfolio experience</span></footer>
+  <noscript><div class="noscript-note">JavaScript is disabled. The project archive still works as a readable page.</div></noscript>
   <script type="module" src="app.js"></script>
 </body>
 </html>

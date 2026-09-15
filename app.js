@@ -51,17 +51,14 @@ function projectSection(project, index) {
     >
       <div class="chapter-inner project-layout">
         <div class="project-number reveal" aria-hidden="true">${project.id}</div>
-
         <header class="project-title-wrap reveal">
           <p class="project-kicker">Jepong Devxyz / Project ${project.id}</p>
           <h2 id="project-title-${project.id}" class="project-title">${escapeText(project.title)}</h2>
         </header>
-
         <div class="project-visual reveal" aria-hidden="true">
           <div class="visual-monogram">JD</div>
           <div class="visual-crosshair">${project.id}</div>
         </div>
-
         <aside class="project-meta reveal" aria-label="Project ${project.id} details">
           <p class="project-subtitle">${escapeText(project.subtitle)}</p>
           <p class="project-description">${escapeText(project.description)}</p>
@@ -91,17 +88,13 @@ function renderNavigation() {
 
 renderProjects();
 renderNavigation();
+root.classList.add('content-ready');
 
 const sections = [...document.querySelectorAll('.chapter[data-chapter]')];
 const navLinks = [...navHost.querySelectorAll('a')];
 
 const fallbackScene = {
-  setProgress() {},
-  setChapter() {},
-  resize() {},
-  start() {},
-  stop() {},
-  destroy() {},
+  setProgress() {}, setChapter() {}, resize() {}, start() {}, stop() {}, destroy() {},
 };
 
 let scene = fallbackScene;
@@ -114,11 +107,13 @@ import('./scene.js')
     scene.setProgress(latestProgress);
     scene.setChapter(Number.parseInt(activeSection?.dataset.chapter || '00', 10) || 0);
     scene.start();
+    root.classList.add('visuals-ready');
   })
   .catch((error) => {
-    root.classList.add('scene-fallback', 'performance-low');
+    root.classList.add('scene-fallback', 'performance-low', 'visuals-ready');
     console.warn('[Jepong Devxyz] Optional scene unavailable:', error);
   });
+
 let ticking = false;
 
 function setActiveSection(section) {
@@ -126,11 +121,9 @@ function setActiveSection(section) {
   activeSection?.classList.remove('chapter--active');
   activeSection = section;
   activeSection.classList.add('chapter--active');
-
   const chapter = activeSection.dataset.chapter || '00';
   currentChapter.textContent = chapter;
   scene.setChapter(Number.parseInt(chapter, 10) || 0);
-
   navLinks.forEach((link) => {
     const active = link.getAttribute('href') === `#chapter-${chapter}`;
     if (active) link.setAttribute('aria-current', 'true');
@@ -145,7 +138,6 @@ function updateScrollState() {
   latestProgress = progress;
   root.style.setProperty('--progress', progress.toFixed(5));
   scene.setProgress(progress);
-
   if (activeSection) {
     const rect = activeSection.getBoundingClientRect();
     const viewport = Math.max(1, window.innerHeight);
@@ -162,24 +154,14 @@ function requestScrollUpdate() {
 
 if ('IntersectionObserver' in window) {
   const observer = new IntersectionObserver((entries) => {
-    const visible = entries
-      .filter((entry) => entry.isIntersecting)
-      .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-
+    const visible = entries.filter((entry) => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio);
     if (visible[0]) setActiveSection(visible[0].target);
-  }, {
-    root: null,
-    rootMargin: '-28% 0px -28% 0px',
-    threshold: [0, 0.08, 0.18, 0.35, 0.55, 0.8],
-  });
-
+  }, { root: null, rootMargin: '-28% 0px -28% 0px', threshold: [0, 0.08, 0.18, 0.35, 0.55, 0.8] });
   sections.forEach((section) => observer.observe(section));
 } else {
   const fallbackActiveCheck = () => {
     const center = window.innerHeight * 0.5;
-    const nearest = sections
-      .map((section) => ({ section, distance: Math.abs(section.getBoundingClientRect().top - center) }))
-      .sort((a, b) => a.distance - b.distance)[0];
+    const nearest = sections.map((section) => ({ section, distance: Math.abs(section.getBoundingClientRect().top - center) })).sort((a, b) => a.distance - b.distance)[0];
     if (nearest) setActiveSection(nearest.section);
   };
   window.addEventListener('scroll', fallbackActiveCheck, { passive: true });
@@ -187,10 +169,7 @@ if ('IntersectionObserver' in window) {
 
 window.addEventListener('scroll', requestScrollUpdate, { passive: true });
 window.addEventListener('resize', requestScrollUpdate, { passive: true });
-
-reducedMotionQuery.addEventListener?.('change', (event) => {
-  root.classList.toggle('is-reduced-motion', event.matches);
-});
+reducedMotionQuery.addEventListener?.('change', (event) => root.classList.toggle('is-reduced-motion', event.matches));
 
 navHost.addEventListener('click', (event) => {
   const link = event.target.closest('a[href^="#chapter-"]');
@@ -198,12 +177,8 @@ navHost.addEventListener('click', (event) => {
   const target = document.querySelector(link.getAttribute('href'));
   if (!target) return;
   event.preventDefault();
-  target.scrollIntoView({
-    behavior: reducedMotionQuery.matches ? 'auto' : 'smooth',
-    block: 'start',
-  });
+  target.scrollIntoView({ behavior: reducedMotionQuery.matches ? 'auto' : 'smooth', block: 'start' });
 });
 
 window.addEventListener('pagehide', () => scene.stop(), { once: true });
-
 updateScrollState();

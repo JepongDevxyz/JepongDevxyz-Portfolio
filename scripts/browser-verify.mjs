@@ -40,17 +40,20 @@ async function verifyViewport(browser, width, height) {
 
   const counts = await page.evaluate(() => {
     const overflow = document.documentElement.scrollWidth - window.innerWidth;
+    const allElements = [...document.querySelectorAll('body *')];
+    const round = (value) => Math.round(value * 10) / 10;
+
     const offenders = overflow > 1
-      ? [...document.querySelectorAll('body *')]
+      ? allElements
           .map((element) => {
             const rect = element.getBoundingClientRect();
             return {
               tag: element.tagName.toLowerCase(),
               id: element.id || '',
               className: typeof element.className === 'string' ? element.className : '',
-              left: Math.round(rect.left * 10) / 10,
-              right: Math.round(rect.right * 10) / 10,
-              width: Math.round(rect.width * 10) / 10,
+              left: round(rect.left),
+              right: round(rect.right),
+              width: round(rect.width),
             };
           })
           .filter((item) => item.left < -1 || item.right > window.innerWidth + 1)
@@ -58,13 +61,67 @@ async function verifyViewport(browser, width, height) {
           .slice(0, 20)
       : [];
 
+    const internalOverflows = overflow > 1
+      ? allElements
+          .map((element) => {
+            const style = getComputedStyle(element);
+            return {
+              tag: element.tagName.toLowerCase(),
+              id: element.id || '',
+              className: typeof element.className === 'string' ? element.className : '',
+              clientWidth: element.clientWidth,
+              scrollWidth: element.scrollWidth,
+              delta: element.scrollWidth - element.clientWidth,
+              overflowX: style.overflowX,
+              whiteSpace: style.whiteSpace,
+              text: (element.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 80),
+            };
+          })
+          .filter((item) => item.delta > 1)
+          .sort((a, b) => b.delta - a.delta)
+          .slice(0, 20)
+      : [];
+
+    const textOffenders = [];
+    if (overflow > 1) {
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      let node;
+      while ((node = walker.nextNode())) {
+        if (!node.textContent?.trim()) continue;
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        const rect = range.getBoundingClientRect();
+        if (rect.left < -1 || rect.right > window.innerWidth + 1) {
+          textOffenders.push({
+            text: node.textContent.trim().replace(/\s+/g, ' ').slice(0, 100),
+            parent: node.parentElement?.tagName.toLowerCase() || '',
+            className: node.parentElement?.className || '',
+            left: round(rect.left),
+            right: round(rect.right),
+            width: round(rect.width),
+          });
+        }
+        range.detach();
+        if (textOffenders.length >= 20) break;
+      }
+    }
+
     return {
       projects: document.querySelectorAll('.chapter--project').length,
       placeholders: [...document.querySelectorAll('.project-title')].filter((node) => node.textContent?.trim() === 'PROJECT PLACEHOLDER').length,
       disabled: document.querySelectorAll('.project-action[aria-disabled="true"]').length,
       nav: document.querySelectorAll('#chapter-nav a').length,
       overflow,
+      root: {
+        innerWidth: window.innerWidth,
+        htmlClientWidth: document.documentElement.clientWidth,
+        htmlScrollWidth: document.documentElement.scrollWidth,
+        bodyClientWidth: document.body.clientWidth,
+        bodyScrollWidth: document.body.scrollWidth,
+      },
       offenders,
+      internalOverflows,
+      textOffenders,
     };
   });
 
@@ -72,7 +129,7 @@ async function verifyViewport(browser, width, height) {
   assert(counts.placeholders === 10, `Expected 10 placeholder titles at ${width}x${height}, found ${counts.placeholders}.`);
   assert(counts.disabled === 20, `Expected 20 disabled project actions at ${width}x${height}, found ${counts.disabled}.`);
   assert(counts.nav === 11, `Expected 11 chapter nav entries at ${width}x${height}, found ${counts.nav}.`);
-  assert(counts.overflow <= 1, `Horizontal overflow detected at ${width}x${height}: ${counts.overflow}px. Offenders: ${JSON.stringify(counts.offenders)}`);
+  assert(counts.overflow <= 1, `Horizontal overflow detected at ${width}x${height}: ${counts.overflow}px. Root: ${JSON.stringify(counts.root)} Box offenders: ${JSON.stringify(counts.offenders)} Internal overflows: ${JSON.stringify(counts.internalOverflows)} Text offenders: ${JSON.stringify(counts.textOffenders)}`);
   assert(pageErrors.length === 0, `Page errors at ${width}x${height}: ${pageErrors.join(' | ')}`);
   assert(consoleErrors.length === 0, `Console errors at ${width}x${height}: ${consoleErrors.join(' | ')}`);
 

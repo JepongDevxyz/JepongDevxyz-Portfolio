@@ -89,6 +89,16 @@
     gap: clamp(.45rem, 1.2dvh, .8rem);
   }
 
+  .reveal {
+    transform: translate3d(0, .25rem, 0);
+    filter: blur(1.5px);
+  }
+
+  .chapter--active .reveal {
+    transform: translate3d(0, 0, 0);
+    filter: blur(0);
+  }
+
   .project-number {
     padding-top: 0;
     font-size: .9rem;
@@ -109,7 +119,6 @@
   .project-visual {
     min-height: clamp(5.5rem, 18dvh, 8.5rem);
     margin-top: 0;
-    transform: none;
   }
 
   .visual-crosshair {

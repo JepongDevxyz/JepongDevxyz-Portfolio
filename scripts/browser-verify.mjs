@@ -133,10 +133,18 @@ async function verifyViewport(browser, width, height) {
   assert(pageErrors.length === 0, `Page errors at ${width}x${height}: ${pageErrors.join(' | ')}`);
   assert(consoleErrors.length === 0, `Console errors at ${width}x${height}: ${consoleErrors.join(' | ')}`);
 
-  await page.locator('#chapter-nav a[href="#chapter-03"]').click();
-  await page.waitForTimeout(450);
+  if (width > 980) {
+    await page.locator('#chapter-nav a[href="#chapter-03"]').click();
+  } else {
+    await page.locator('#chapter-03').scrollIntoViewIfNeeded();
+  }
+
+  await page.waitForFunction(() => document.querySelector('#chapter-nav a[href="#chapter-03"]')?.getAttribute('aria-current') === 'true');
   const navState = await page.getAttribute('#chapter-nav a[href="#chapter-03"]', 'aria-current');
-  assert(navState === 'true', `Chapter 03 navigation did not become active at ${width}x${height}.`);
+  assert(navState === 'true', `Chapter 03 did not become active at ${width}x${height}.`);
+
+  const overflowAfterNavigation = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  assert(overflowAfterNavigation <= 1, `Horizontal overflow appeared after navigating to chapter 03 at ${width}x${height}: ${overflowAfterNavigation}px.`);
 
   await context.close();
 }
@@ -189,7 +197,7 @@ try {
   await verifyReducedMotion(browser);
   await verifyWebglFailure(browser);
 
-  console.log('Browser verification passed: 5 viewport profiles, navigation, reduced motion, WebGL fallback, 0 console/page errors.');
+  console.log('Browser verification passed: 5 viewport profiles, navigation/scroll activation, reduced motion, WebGL fallback, 0 console/page errors.');
 } finally {
   if (browser) await browser.close();
   server.kill('SIGTERM');

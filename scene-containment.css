@@ -16,3 +16,9 @@
 .ambient--two {
   left: 0;
 }
+
+@media (max-width: 480px) {
+  .project-title {
+    font-size: clamp(2.5rem, 13vw, 5.25rem);
+  }
+}

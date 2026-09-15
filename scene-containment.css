@@ -1,3 +1,23 @@
+/* Root scrolling contract: vertical project navigation only, never horizontal page pan. */
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-x: clip;
+  overscroll-behavior-x: none;
+  touch-action: pan-y pinch-zoom;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 /* Keep decorative scene geometry inside the viewport's horizontal bounds. */
 .site-shell {
   contain: layout paint;

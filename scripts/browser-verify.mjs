@@ -38,19 +38,41 @@ async function verifyViewport(browser, width, height) {
   await page.goto(BASE, { waitUntil: 'networkidle' });
   await page.waitForSelector('.chapter--project');
 
-  const counts = await page.evaluate(() => ({
-    projects: document.querySelectorAll('.chapter--project').length,
-    placeholders: [...document.querySelectorAll('.project-title')].filter((node) => node.textContent?.trim() === 'PROJECT PLACEHOLDER').length,
-    disabled: document.querySelectorAll('.project-action[aria-disabled="true"]').length,
-    nav: document.querySelectorAll('#chapter-nav a').length,
-    overflow: document.documentElement.scrollWidth - window.innerWidth,
-  }));
+  const counts = await page.evaluate(() => {
+    const overflow = document.documentElement.scrollWidth - window.innerWidth;
+    const offenders = overflow > 1
+      ? [...document.querySelectorAll('body *')]
+          .map((element) => {
+            const rect = element.getBoundingClientRect();
+            return {
+              tag: element.tagName.toLowerCase(),
+              id: element.id || '',
+              className: typeof element.className === 'string' ? element.className : '',
+              left: Math.round(rect.left * 10) / 10,
+              right: Math.round(rect.right * 10) / 10,
+              width: Math.round(rect.width * 10) / 10,
+            };
+          })
+          .filter((item) => item.left < -1 || item.right > window.innerWidth + 1)
+          .sort((a, b) => Math.max(b.right - window.innerWidth, -b.left) - Math.max(a.right - window.innerWidth, -a.left))
+          .slice(0, 20)
+      : [];
+
+    return {
+      projects: document.querySelectorAll('.chapter--project').length,
+      placeholders: [...document.querySelectorAll('.project-title')].filter((node) => node.textContent?.trim() === 'PROJECT PLACEHOLDER').length,
+      disabled: document.querySelectorAll('.project-action[aria-disabled="true"]').length,
+      nav: document.querySelectorAll('#chapter-nav a').length,
+      overflow,
+      offenders,
+    };
+  });
 
   assert(counts.projects === 10, `Expected 10 project chapters at ${width}x${height}, found ${counts.projects}.`);
   assert(counts.placeholders === 10, `Expected 10 placeholder titles at ${width}x${height}, found ${counts.placeholders}.`);
   assert(counts.disabled === 20, `Expected 20 disabled project actions at ${width}x${height}, found ${counts.disabled}.`);
   assert(counts.nav === 11, `Expected 11 chapter nav entries at ${width}x${height}, found ${counts.nav}.`);
-  assert(counts.overflow <= 1, `Horizontal overflow detected at ${width}x${height}: ${counts.overflow}px.`);
+  assert(counts.overflow <= 1, `Horizontal overflow detected at ${width}x${height}: ${counts.overflow}px. Offenders: ${JSON.stringify(counts.offenders)}`);
   assert(pageErrors.length === 0, `Page errors at ${width}x${height}: ${pageErrors.join(' | ')}`);
   assert(consoleErrors.length === 0, `Console errors at ${width}x${height}: ${consoleErrors.join(' | ')}`);
 

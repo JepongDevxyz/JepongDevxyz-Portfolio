@@ -1,9 +1,19 @@
 import { spawn } from 'node:child_process';
-import process from 'node:process';
 import { chromium } from 'playwright';
 
 const PORT = 4173;
 const BASE = `http://127.0.0.1:${PORT}`;
+const VIEWPORTS = [
+  [320, 640],
+  [360, 800],
+  [390, 844],
+  [768, 1024],
+  [1024, 768],
+  [1366, 768],
+  [1440, 900],
+  [1920, 1080],
+];
+
 const server = spawn('python3', ['-m', 'http.server', String(PORT), '--bind', '127.0.0.1'], {
   stdio: ['ignore', 'pipe', 'pipe'],
 });
@@ -25,24 +35,36 @@ function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
-async function verifyViewport(browser, width, height) {
-  const context = await browser.newContext({ viewport: { width, height } });
-  const page = await context.newPage();
-  const pageErrors = [];
-  const consoleErrors = [];
-  page.on('pageerror', (error) => pageErrors.push(error.message));
-  page.on('console', (message) => {
-    if (message.type() === 'error') consoleErrors.push(message.text());
-  });
+async function inspectLayout(page) {
+  return page.evaluate(() => {
+    const round = (value) => Math.round(value * 10) / 10;
+    const rectOf = (selector) => {
+      const element = document.querySelector(selector);
+      if (!element) return null;
+      const rect = element.getBoundingClientRect();
+      return {
+        selector,
+        left: round(rect.left),
+        top: round(rect.top),
+        right: round(rect.right),
+        bottom: round(rect.bottom),
+        width: round(rect.width),
+        height: round(rect.height),
+      };
+    };
 
-  await page.goto(BASE, { waitUntil: 'networkidle' });
-  await page.waitForSelector('.chapter--project');
+    const intersects = (a, b, tolerance = 1) => {
+      if (!a || !b) return false;
+      return (
+        a.left < b.right - tolerance
+        && a.right > b.left + tolerance
+        && a.top < b.bottom - tolerance
+        && a.bottom > b.top + tolerance
+      );
+    };
 
-  const counts = await page.evaluate(() => {
     const overflow = document.documentElement.scrollWidth - window.innerWidth;
     const allElements = [...document.querySelectorAll('body *')];
-    const round = (value) => Math.round(value * 10) / 10;
-
     const offenders = overflow > 1
       ? allElements
           .map((element) => {
@@ -57,79 +79,72 @@ async function verifyViewport(browser, width, height) {
             };
           })
           .filter((item) => item.left < -1 || item.right > window.innerWidth + 1)
-          .sort((a, b) => Math.max(b.right - window.innerWidth, -b.left) - Math.max(a.right - window.innerWidth, -a.left))
           .slice(0, 20)
       : [];
 
-    const internalOverflows = overflow > 1
-      ? allElements
-          .map((element) => {
-            const style = getComputedStyle(element);
-            return {
-              tag: element.tagName.toLowerCase(),
-              id: element.id || '',
-              className: typeof element.className === 'string' ? element.className : '',
-              clientWidth: element.clientWidth,
-              scrollWidth: element.scrollWidth,
-              delta: element.scrollWidth - element.clientWidth,
-              overflowX: style.overflowX,
-              whiteSpace: style.whiteSpace,
-              text: (element.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 80),
-            };
-          })
-          .filter((item) => item.delta > 1)
-          .sort((a, b) => b.delta - a.delta)
-          .slice(0, 20)
-      : [];
+    const chapter = rectOf('#chapter-01');
+    const number = rectOf('#chapter-01 .project-number');
+    const title = rectOf('#chapter-01 .project-title-wrap');
+    const visual = rectOf('#chapter-01 .project-visual');
+    const meta = rectOf('#chapter-01 .project-meta');
+    const brand = rectOf('.brand');
+    const readout = rectOf('.chapter-readout');
 
-    const textOffenders = [];
-    if (overflow > 1) {
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-      let node;
-      while ((node = walker.nextNode())) {
-        if (!node.textContent?.trim()) continue;
-        const range = document.createRange();
-        range.selectNodeContents(node);
-        const rect = range.getBoundingClientRect();
-        if (rect.left < -1 || rect.right > window.innerWidth + 1) {
-          textOffenders.push({
-            text: node.textContent.trim().replace(/\s+/g, ' ').slice(0, 100),
-            parent: node.parentElement?.tagName.toLowerCase() || '',
-            className: node.parentElement?.className || '',
-            left: round(rect.left),
-            right: round(rect.right),
-            width: round(rect.width),
-          });
-        }
-        range.detach();
-        if (textOffenders.length >= 20) break;
-      }
+    const collisions = [];
+    const pairs = [
+      ['number/title', number, title],
+      ['number/visual', number, visual],
+      ['number/meta', number, meta],
+      ['title/visual', title, visual],
+      ['title/meta', title, meta],
+      ['visual/meta', visual, meta],
+      ['brand/title', brand, title],
+      ['readout/title', readout, title],
+    ];
+    for (const [name, first, second] of pairs) {
+      if (intersects(first, second)) collisions.push({ name, first, second });
     }
 
     return {
       projects: document.querySelectorAll('.chapter--project').length,
-      placeholders: [...document.querySelectorAll('.project-title')].filter((node) => node.textContent?.trim() === 'PROJECT PLACEHOLDER').length,
+      placeholders: [...document.querySelectorAll('.project-title')]
+        .filter((node) => node.textContent?.trim() === 'PROJECT PLACEHOLDER').length,
       disabled: document.querySelectorAll('.project-action[aria-disabled="true"]').length,
       nav: document.querySelectorAll('#chapter-nav a').length,
       overflow,
-      root: {
-        innerWidth: window.innerWidth,
-        htmlClientWidth: document.documentElement.clientWidth,
-        htmlScrollWidth: document.documentElement.scrollWidth,
-        bodyClientWidth: document.body.clientWidth,
-        bodyScrollWidth: document.body.scrollWidth,
-      },
       offenders,
-      internalOverflows,
-      textOffenders,
+      chapter,
+      collisions,
+      viewport: { width: window.innerWidth, height: window.innerHeight },
     };
   });
+}
 
-  assert(counts.projects === 10, `Expected 10 project chapters at ${width}x${height}, found ${counts.projects}.`);
-  assert(counts.placeholders === 10, `Expected 10 placeholder titles at ${width}x${height}, found ${counts.placeholders}.`);
-  assert(counts.disabled === 20, `Expected 20 disabled project actions at ${width}x${height}, found ${counts.disabled}.`);
-  assert(counts.nav === 11, `Expected 11 chapter nav entries at ${width}x${height}, found ${counts.nav}.`);
-  assert(counts.overflow <= 1, `Horizontal overflow detected at ${width}x${height}: ${counts.overflow}px. Root: ${JSON.stringify(counts.root)} Box offenders: ${JSON.stringify(counts.offenders)} Internal overflows: ${JSON.stringify(counts.internalOverflows)} Text offenders: ${JSON.stringify(counts.textOffenders)}`);
+async function verifyViewport(browser, width, height) {
+  const context = await browser.newContext({ viewport: { width, height } });
+  const page = await context.newPage();
+  const pageErrors = [];
+  const consoleErrors = [];
+
+  page.on('pageerror', (error) => pageErrors.push(error.message));
+  page.on('console', (message) => {
+    if (message.type() === 'error') consoleErrors.push(message.text());
+  });
+
+  await page.goto(BASE, { waitUntil: 'networkidle' });
+  await page.waitForSelector('.chapter--project');
+  await page.locator('#chapter-01').scrollIntoViewIfNeeded();
+  await page.waitForTimeout(120);
+
+  const layout = await inspectLayout(page);
+
+  assert(layout.projects === 10, `Expected 10 project chapters at ${width}x${height}, found ${layout.projects}.`);
+  assert(layout.placeholders === 10, `Expected 10 placeholder titles at ${width}x${height}, found ${layout.placeholders}.`);
+  assert(layout.disabled === 20, `Expected 20 disabled project actions at ${width}x${height}, found ${layout.disabled}.`);
+  assert(layout.nav === 11, `Expected 11 chapter nav entries at ${width}x${height}, found ${layout.nav}.`);
+  assert(layout.overflow <= 1, `Horizontal overflow at ${width}x${height}: ${layout.overflow}px. ${JSON.stringify(layout.offenders)}`);
+  assert(layout.chapter && layout.chapter.height <= height + 1, `Chapter 01 is not fit-to-screen at ${width}x${height}: ${layout.chapter?.height}px tall for ${height}px viewport.`);
+  assert(layout.collisions.length === 0, `Overlapping UI at ${width}x${height}: ${JSON.stringify(layout.collisions)}`);
   assert(pageErrors.length === 0, `Page errors at ${width}x${height}: ${pageErrors.join(' | ')}`);
   assert(consoleErrors.length === 0, `Console errors at ${width}x${height}: ${consoleErrors.join(' | ')}`);
 
@@ -144,7 +159,7 @@ async function verifyViewport(browser, width, height) {
   assert(navState === 'true', `Chapter 03 did not become active at ${width}x${height}.`);
 
   const overflowAfterNavigation = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
-  assert(overflowAfterNavigation <= 1, `Horizontal overflow appeared after navigating to chapter 03 at ${width}x${height}: ${overflowAfterNavigation}px.`);
+  assert(overflowAfterNavigation <= 1, `Horizontal overflow appeared after navigation at ${width}x${height}: ${overflowAfterNavigation}px.`);
 
   await context.close();
 }
@@ -191,13 +206,13 @@ try {
   await waitForServer();
   browser = await chromium.launch({ headless: true });
 
-  for (const [width, height] of [[320, 640], [390, 844], [768, 1024], [844, 390], [1440, 900]]) {
+  for (const [width, height] of VIEWPORTS) {
     await verifyViewport(browser, width, height);
   }
   await verifyReducedMotion(browser);
   await verifyWebglFailure(browser);
 
-  console.log('Browser verification passed: 5 viewport profiles, navigation/scroll activation, reduced motion, WebGL fallback, 0 console/page errors.');
+  console.log(`Browser verification passed: ${VIEWPORTS.length} viewport profiles, fit-to-screen chapters, no overlap, navigation/scroll activation, reduced motion, WebGL fallback, 0 console/page errors.`);
 } finally {
   if (browser) await browser.close();
   server.kill('SIGTERM');

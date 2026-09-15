@@ -1,4 +1,18 @@
-/* Keep intentionally oversized decorative layers inside the fixed viewport scene. */
+/* Keep decorative scene geometry inside the viewport's horizontal bounds. */
 .site-shell {
   contain: layout paint;
+}
+
+.grain {
+  left: 0;
+  right: 0;
+  transform: translate3d(0, calc(var(--progress) * -1%), 0);
+}
+
+.ambient--one {
+  right: 0;
+}
+
+.ambient--two {
+  left: 0;
 }

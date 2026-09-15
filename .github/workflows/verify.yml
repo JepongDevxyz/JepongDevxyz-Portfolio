@@ -15,10 +15,10 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
 
@@ -26,7 +26,7 @@ jobs:
         run: npm run verify
 
       - name: Install Playwright for browser verification
-        run: npm install --no-save --package-lock=false playwright@1.50.1
+        run: npm install --no-save --package-lock=false playwright@1.63.0
 
       - name: Install Chromium
         run: npx playwright install --with-deps chromium

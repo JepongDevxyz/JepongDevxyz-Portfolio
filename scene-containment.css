@@ -177,6 +177,16 @@
     gap: .55rem 1rem;
   }
 
+  .reveal {
+    transform: translate3d(0, .2rem, 0);
+    filter: blur(1px);
+  }
+
+  .chapter--active .reveal {
+    transform: translate3d(0, 0, 0);
+    filter: blur(0);
+  }
+
   .project-number {
     padding-top: 0;
     font-size: 1rem;

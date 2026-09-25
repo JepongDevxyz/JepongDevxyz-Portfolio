@@ -1,41 +1,47 @@
-# JepongDevxyz Portfolio
+# Placeholder Portfolio Derivative
 
-A lightweight, cinematic portfolio for **Jepong Devxyz**. The interaction language is inspired by the feeling of MengTo's Kage project—full-screen chapters, editorial type, layered depth, and scroll-driven transitions—but this repository uses original code, branding, layout decisions, and visuals. It does not copy Kage source code or artwork.
+This branch uses the original `davidhckh/portfolio-2025` project as its base. Personal copy and project text are placeholders only.
 
-## Current content
+# Portfolio (2025)
 
-The first version intentionally ships with ten **PROJECT PLACEHOLDER** chapters. Project names, descriptions, GitHub URLs, and live URLs will be added only after they are confirmed as official.
+Personal portfolio site: project case studies, lightweight 3D and shader demos, bilingual copy (English and German).
 
-## Performance approach
+Built with **Vue 3**, **TypeScript**, and **Vite**. Motion via **GSAP** and **Lenis**, 3D via **three.js**, audio via **Howler**. GLSL is compiled through **vite-plugin-glsl**.
 
-- Semantic DOM content is always readable, with or without WebGL.
-- A dependency-free WebGL background is enabled only when device capability allows it.
-- Low-memory, low-core, WebGL-disabled, and reduced-motion environments use the lightweight CSS fallback.
-- Device pixel ratio is capped and rendering resolution can degrade when frame times become expensive.
-- Native scrolling remains the source of truth; there is no scroll-jacking.
+## Scripts
 
-## Run locally
+| Command        | Description                          |
+| -------------- | ------------------------------------ |
+| `npm run dev`   | Dev server on port **3000** (`strictPort`) |
+| `npm run build` | `vue-tsc` then production bundle to `dist/` |
+| `npm run preview` | Serve the production build locally |
+| `npm run typecheck` | Typecheck only (`vue-tsc -b`) |
 
-```bash
-python3 -m http.server 4173
-```
+## Content
 
-Then open `http://localhost:4173`.
+- **Projects**: `src/content/projects/{en,de}/<slug>.ts` — copy, tags, media, links. Slugs must align with `projectIds` in `src/content/projects/index.ts`.
+- **Previews / listing**: `src/content/projects/previews/`.
+- **Tags**: variants and labels live in `src/components/tagVariants.ts` (used by `Tag.vue` and content types).
 
-## Verify before publishing
+## Stack (high level)
 
-```bash
-npm run verify
-```
+- Vue 3 (`<script setup>`), SCSS with shared mixins (`src/assets/styles/`)
+- i18n helpers under `src/i18n/`
+- WebGL / GLSL under `src/three/` where applicable
 
-This runs syntax checks, static contract checks, and the Node test suite.
+## Credits & Attribution
 
-## Structure
+This project was created and designed by David Heckhoff.
 
-- `index.html` — semantic shell and intro chapter
-- `styles.css` — cinematic layout, responsive rules, reduced-motion/fallback styles
-- `projects.js` — placeholder project data source
-- `app.js` — chapter rendering, navigation, and scroll choreography
-- `scene.js` — optional adaptive WebGL background
-- `tests/` — source and behavior contracts
-- `docs/superpowers/` — approved design spec and implementation plan
+If you use this project or substantial parts of its source code as a base for your own portfolio or work, attribution must be preserved.
+
+Please keep:
+
+- existing credit comments in the source code
+- this attribution section in the README
+- a visible reference to the original project/repository in derivative works
+
+Original portfolio:
+-> https://david-hckh.com
+
+Commercial reuse or redistribution of substantial portions of this project without permission is prohibited.

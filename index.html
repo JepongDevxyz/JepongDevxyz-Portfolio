@@ -1,65 +1,64 @@
 <!doctype html>
-<html lang="en" class="no-js">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#07090d">
-  <meta name="description" content="Jepong Devxyz — a cinematic archive of projects and experiments.">
-  <title>Jepong Devxyz — Project Archive</title>
-  <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="scene-containment.css">
-  <link rel="stylesheet" href="loading.css">
-  <script>document.documentElement.classList.replace('no-js', 'js');</script>
-</head>
-<body>
-  <a class="skip-link" href="#main-content">Skip to projects</a>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <div class="site-shell" aria-hidden="true">
-    <div class="ambient ambient--one"></div>
-    <div class="ambient ambient--two"></div>
-    <div class="grain"></div>
-    <canvas id="scene-canvas"></canvas>
-  </div>
+    <title>Your Name - Creative Developer Portfolio</title>
+    <meta name="description" content="Placeholder portfolio content. Replace with your own profile and project information." />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://david-hckh.com/" />
 
-  <header class="site-header" aria-label="Portfolio header">
-    <a class="brand" href="#chapter-00" aria-label="Jepong Devxyz home">
-      <span class="brand-mark" aria-hidden="true">JD</span>
-      <span class="brand-copy">
-        <strong>Jepong Devxyz</strong>
-        <small>Project Archive / 2026</small>
-      </span>
-    </a>
-    <div class="chapter-readout" aria-live="polite">
-      <span id="current-chapter">00</span><span class="chapter-divider">/</span><span>10</span>
+    <meta property="og:title" content="David Heckhoff - Web Developer (WebGL & Node.js)" />
+    <meta
+      property="og:description"
+      content="Web developer creating interactive 3D web experiences and real-time apps with WebGL, TypeScript, and Node.js for high-performance, engaging websites."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://david-hckh.com/" />
+    <meta property="og:image" content="https://david-hckh.com/meta/og-image.webp" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="David Heckhoff - Web Developer (WebGL & Node.js)" />
+    <meta
+      name="twitter:description"
+      content="Web developer creating interactive 3D web experiences and real-time apps with WebGL, TypeScript, and Node.js for high-performance, engaging websites."
+    />
+    <meta name="twitter:image" content="https://david-hckh.com/meta/twitter-image.webp" />
+
+    <link rel="preload" href="/fonts/urbanist-400.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
+    <link rel="preload" href="/fonts/urbanist-700.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
+    <link rel="preload" href="/fonts/urbanist-900.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
+    <link rel="preload" href="/fonts/pro-font-windows-400.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
+    <link rel="preload" href="/fonts/pro-font-windows-700.woff2" as="font" type="font/woff2" crossorigin="anonymous" />
+
+    <link rel="icon" type="image/png" href="/meta/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/meta/favicon.svg" />
+    <link rel="shortcut icon" href="/meta/favicon.ico" />
+
+    <meta name="theme-color" content="#dfd1bc" />
+  </head>
+  <body class="is-loading">
+    <svg style="display: none" viewBox="0 0 56 61" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <path
+          id="logo-path"
+          d="M3 14 24 2C28 0 28 0 32 2L53 14C56 16 56 17 56 19L56 43C56 46 55 47 51 49L32 59C28 61 28 61 24 59L5 49C1 47 0 46 0 43L0 19C0 17 0 16 3 14M28 4 5 17 28 28 51 17 28 4M53 20 30 31 30 56 53 44 53 20M40 42 33 35C33 35 32 34 33 33 34 32 35 33 36 34L36 34 43 41C44 42 44 42 43 43L35 51C35 51 34 52 33 51 32 50 33 49 33 49L40 42M16 42 23 35C23 35 24 34 23 33 22 32 21 33 20 34L13 41C12 42 12 42 13 43L21 51C21 51 22 52 23 51 24 50 23 49 23 49L16 42"
+        ></path>
+      </defs>
+    </svg>
+    <div id="app"></div>
+    <div class="preloader">
+      <svg class="preloader-svg" viewBox="0 0 56 61" xmlns="http://www.w3.org/2000/svg">
+        <mask id="preloader-mask">
+          <rect fill="black" height="61" width="61"></rect>
+          <rect fill="white" height="61" width="61" class="preloader-rect" style="transform: scaleY(0)"></rect>
+        </mask>
+
+        <use href="#logo-path" class="preloader-path" opacity="0.3"></use>
+        <use href="#logo-path" class="preloader-path" mask="url(#preloader-mask)"></use>
+      </svg>
     </div>
-  </header>
-
-  <nav id="chapter-nav" class="chapter-nav" aria-label="Project chapters"></nav>
-  <div class="scroll-progress" aria-hidden="true"><span id="scroll-progress-bar"></span></div>
-
-  <main id="main-content">
-    <section id="chapter-00" class="chapter chapter--intro chapter--active" data-chapter="00" aria-labelledby="intro-title">
-      <div class="chapter-inner intro-grid">
-        <p class="eyebrow reveal">JEPONG DEVXYZ / PROJECT ARCHIVE</p>
-        <h1 id="intro-title" class="intro-title reveal"><span>BUILD.</span><span>BREAK.</span><span>MAKE IT</span><span>BETTER.</span></h1>
-        <div class="intro-meta reveal"><p>A living collection of experiments, apps, tools, and ideas.</p><p class="intro-note">Official projects will appear here one by one.</p></div>
-        <a class="explore-cue" href="#chapter-01"><span>Scroll to explore</span><span class="explore-line" aria-hidden="true"></span></a>
-      </div>
-    </section>
-
-    <div class="loading-skeleton" aria-hidden="true">
-      <div class="loading-skeleton__inner">
-        <span class="loading-skeleton__number"></span>
-        <div class="loading-skeleton__title"><span></span><span></span></div>
-        <span class="loading-skeleton__visual"></span>
-        <div class="loading-skeleton__meta"><span></span><span></span><span></span><span></span></div>
-      </div>
-    </div>
-    <div id="project-chapters"></div>
-  </main>
-
-  <footer class="site-footer"><span>© 2026 Jepong Devxyz</span><span>Original portfolio experience</span></footer>
-  <noscript><div class="noscript-note">JavaScript is disabled. The project archive still works as a readable page.</div></noscript>
-  <script type="module" src="app.js"></script>
-</body>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
 </html>
